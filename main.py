@@ -22,7 +22,7 @@ LOG_HISTORY = deque(maxlen=100)
 
 def memory_logger_processor(logger, method_name, event_dict):
     """Custom processor to capture logs in memory for the /logs/tail endpoint."""
-    # We make a copy to avoid mutating the log dictionary used by the console printer
+    # This now safely runs while event_dict is still a true Python dictionary
     LOG_HISTORY.append(event_dict.copy())
     return event_dict
 
@@ -30,13 +30,14 @@ structlog.configure(
     processors=[
         structlog.processors.TimeStamper(fmt="iso", key="ts"),
         structlog.processors.add_log_level,
+        memory_logger_processor,       # <-- MOVE THIS HERE (Before JSONRenderer)
         structlog.processors.JSONRenderer(),
     ],
     logger_factory=structlog.PrintLoggerFactory(),
     wrapper_class=structlog.make_filtering_bound_logger(10), # DEBUG level
 )
 
-# Create a separate, internal structlog instance dedicated to capturing logs in memory
+# Use the standard structured logger throughout the application
 memory_logger = structlog.get_logger()
 memory_logger = memory_logger.bind()
 # Inject our custom memory buffer processor manually
