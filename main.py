@@ -4,6 +4,7 @@ from collections import deque
 from fastapi import FastAPI, Request, Response
 from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 import structlog
+from fastapi.responses import PlainTextResponse
 
 # 1. Initialize FastAPI app
 app = FastAPI()
@@ -78,10 +79,13 @@ def do_work(n: int, email: str = "your_email@example.com"):
     return {"email": email, "done": n}
 
 
-@app.get("/metrics")
+@app.get("/metrics", response_class=PlainTextResponse)
 def get_metrics():
-    """Exposes live Prometheus metrics."""
-    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    """Exposes live Prometheus metrics cleanly as plain text."""
+    # Decode the bytes from generate_latest() into a UTF-8 string
+    metrics_data = generate_latest().decode("utf-8")
+    return PlainTextResponse(content=metrics_data, media_type=CONTENT_TYPE_LATEST)
+
 
 
 @app.get("/healthz")
