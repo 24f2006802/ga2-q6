@@ -59,7 +59,7 @@ def read_root():
 
 
 @app.get("/work")
-def do_work(n: int, email: str = "your_email@example.com"):
+def do_work(n: int, email: str = "24f2006802@ds.study.iitm.ac.in"):
     """Simulates K units of work and returns confirmation."""
     for _ in range(n):
         pass
